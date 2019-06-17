@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<button class="btn">debounce</button>
+	<button class="btn2">throttle</button>
+	<script src="../jquery.min.js"></script>
+	<script>
+		
+
+
+		const getData = (a, b, c) => {
+			$.ajax({
+				url: 'http://127.0.0.1:3000/haha',
+				type: 'post',
+				data: {}
+			})
+			.then( res => {
+				console.log(res)
+			})
+		}
+
+		// 节流，在一段固定的时间内(delay)，无论触发多少次事件，都只执行一次既定动作
+		// 常用场景，点击提交按钮
+
+
+		// 使用定时器
+
+		$('.btn').bind('click', (e) => {
+			if (window.timerId) return
+			window.timerId = setTimeout(() => {
+				getData()
+				clearTimeout(window.timerId)
+				window.timerId = null
+			}, 1000) 
+		})
+
+
+		// *******  优化后  ******  提高可配置性
+		const eventHandler = (fn, delay) => {
+			let timerId
+			return () => {
+				if (timerId) return
+				timerId = setTimeout(() => {
+					getData.call(this)
+					clearTimeout(timerId)
+					timerId = null
+				}, delay) 
+			}
+		}
+		$('.btn').bind('click', eventHandler(getData, 1000))
+
+		// 使用时间戳
+
+		const eventHandler = (fn, delay) => {
+			let last = fn.last || 0
+			return () => {
+				let current = new Date().getTime()
+				if (last + delay > current) return
+				fn.call(this)
+				last = current
+			}
+		}
+
+		$('.btn').bind('click', eventHandler(getData, 1000))
+
+
+		// *********************** 分割线 ***********************
+
+		// debounce
+
+		// 防抖程序，无论点多少次，都只执行最后一次
+		const eventHandler = (fn, delay) => {
+			return () => {
+				if (fn.timerId) {
+					clearTimeout(fn.timerId)
+					// fn.timerId = null
+				}
+				fn.timerId = setTimeout(() => {
+					fn.call(this)
+				}, delay)
+			}
+		}
+		$('.btn2').bind('click', eventHandler(getData, 1000))
+
+
+	</script>
+</body>
